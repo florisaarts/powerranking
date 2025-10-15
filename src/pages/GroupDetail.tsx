@@ -73,12 +73,15 @@ const GroupDetail = () => {
 
       // Laad profiles voor deze members
       if (membersData && membersData.length > 0) {
+        const userIds = membersData.map(m => m.user_id)
+        console.log('Looking for profiles with user IDs:', userIds)
+        
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username')
-          .in('id', membersData.map(m => m.user_id))
+          .in('id', userIds)
 
-        console.log('Profiles data:', profiles)
+        console.log('Profiles query result:', profiles)
         console.log('Profiles error:', profilesError)
 
         if (profilesError) {
@@ -86,10 +89,15 @@ const GroupDetail = () => {
         }
 
         // Combineer members met profiles
-        const membersWithProfiles = membersData.map(member => ({
-          ...member,
-          profiles: profiles?.find(p => p.id === member.user_id) || { username: 'Unknown' }
-        }))
+        const membersWithProfiles = membersData.map(member => {
+          const profile = profiles?.find(p => p.id === member.user_id)
+          console.log(`Member ${member.user_id} matched with profile:`, profile)
+          
+          return {
+            ...member,
+            profiles: profile || { username: 'Unknown' }
+          }
+        })
 
         console.log('Setting members:', membersWithProfiles.length, 'members found')
         console.log('Members with profiles:', membersWithProfiles)
