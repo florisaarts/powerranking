@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard'
 import Ranking from './pages/Ranking'
 import GroupDetail from './pages/GroupDetail'
 import Profile from './pages/Profile'
+import Training from './pages/Training'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -79,6 +80,10 @@ function App() {
             <Route 
               path="/profile/:userId" 
               element={user ? <Profile user={user} /> : <Navigate to="/login" replace />} 
+            />
+            <Route 
+              path="/training/:groupId" 
+              element={user ? <Training user={user} /> : <Navigate to="/login" replace />} 
             />
             <Route 
               path="/" 

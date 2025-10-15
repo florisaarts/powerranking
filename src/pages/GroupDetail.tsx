@@ -204,12 +204,20 @@ const GroupDetail = () => {
                 Aangemaakt op {new Date(group.created_at).toLocaleDateString('nl-NL')}
               </p>
             </div>
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium"
-            >
-              Uitnodigen
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/training/${groupId}`)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                📅 Trainingen
+              </button>
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Uitnodigen
+              </button>
+            </div>
           </div>
           
           {/* Invite Code Box */}
