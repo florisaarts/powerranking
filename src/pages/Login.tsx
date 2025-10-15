@@ -16,13 +16,6 @@ const Login = () => {
       return
     }
 
-    // Check if using placeholder credentials
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
-      setError('Demo mode: Please configure Supabase credentials in .env.local to enable authentication')
-      return
-    }
-
     setLoading(true)
     setError(null)
 
@@ -118,20 +111,6 @@ const Login = () => {
                 Maak een account aan
               </Link>
             </p>
-            <p className="text-sm text-gray-600">
-              Demo mode: Configure Supabase credentials to enable authentication
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                // Demo bypass - simulate successful login
-                localStorage.setItem('demoUser', 'true')
-                window.location.reload()
-              }}
-              className="text-primary hover:text-primary-dark text-sm font-medium underline"
-            >
-              Skip to Dashboard (Demo)
-            </button>
           </div>
         </form>
       </div>

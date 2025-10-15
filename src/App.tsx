@@ -20,29 +20,7 @@ function App() {
   })
 
   useEffect(() => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-    
-    // Check if we're in demo mode (placeholder credentials)
-    if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co') {
-      // Demo mode - check for demo user in localStorage
-      const demoUser = localStorage.getItem('demoUser')
-      if (demoUser) {
-        setUser({
-          id: 'demo-user',
-          email: 'demo@powerranking.app',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          aud: 'authenticated',
-          role: 'authenticated',
-          app_metadata: {},
-          user_metadata: {}
-        } as User)
-      }
-      setLoading(false)
-      return
-    }
-
-    // Real Supabase mode
+    // Get Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setLoading(false)
