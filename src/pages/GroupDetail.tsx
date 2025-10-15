@@ -65,9 +65,14 @@ const GroupDetail = () => {
         `)
         .eq('group_id', groupId)
 
+      console.log('Loading members for group:', groupId)
+      console.log('Members data:', membersData)
+      console.log('Members error:', membersError)
+
       if (membersError) {
         console.error('Error loading members:', membersError)
       } else {
+        console.log('Setting members:', membersData?.length || 0, 'members found')
         setMembers(membersData || [])
       }
     } catch (err) {
