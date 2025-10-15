@@ -70,8 +70,8 @@ const TrainingScheduleDetail = ({ user }: TrainingScheduleDetailProps) => {
 
       setSchedule(scheduleData)
 
-      // Load exercises - alleen basis oefeningen, met hun tussen oefeningen
-      const { data: allExercises, error: exercisesError } = await supabase
+      // Load exercises
+      const { data: exercisesData, error: exercisesError } = await supabase
         .from('training_exercises')
         .select('*')
         .eq('schedule_id', scheduleId)
@@ -80,13 +80,7 @@ const TrainingScheduleDetail = ({ user }: TrainingScheduleDetailProps) => {
       if (exercisesError) {
         console.error('Error loading exercises:', exercisesError)
       } else {
-        // Groepeer exercises: basis exercises met hun tussen oefeningen
-        const basisExercises = (allExercises || []).filter(ex => ex.exercise_type === 'basis' && !ex.parent_exercise_id)
-        const exercisesWithTussen = basisExercises.map(basis => ({
-          ...basis,
-          tussenOefeningen: (allExercises || []).filter(ex => ex.parent_exercise_id === basis.id)
-        }))
-        setExercises(exercisesWithTussen)
+        setExercises(exercisesData || [])
       }
     } catch (err) {
       console.error('Error:', err)

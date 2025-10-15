@@ -5,16 +5,20 @@
 CREATE TABLE IF NOT EXISTS training_exercises (
   id uuid primary key default gen_random_uuid(),
   schedule_id uuid references training_schedules(id) on delete cascade not null,
+  parent_exercise_id uuid references training_exercises(id) on delete cascade,
   name text not null,
   description text,
-  sets integer not null default 1,
-  reps integer not null default 1,
-  weight_percentage integer check (weight_percentage >= 0 and weight_percentage <= 100),
+  sets text not null default '3',
+  reps text not null default '10',
+  weight_percentage text,
   order_index integer not null default 0,
   exercise_type text not null default 'basis' check (exercise_type in ('basis', 'tussen')),
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+
+-- Als een basis oefening wordt verwijderd, worden de tussen oefeningen ook verwijderd
+-- Dit wordt al geregeld door de foreign key constraint met ON DELETE CASCADE
 
 -- ============================================
 -- RLS POLICIES voor training_exercises
@@ -73,6 +77,7 @@ CREATE POLICY "training_exercises_delete_policy" ON training_exercises
 -- Index voor betere performance
 CREATE INDEX IF NOT EXISTS idx_training_exercises_schedule ON training_exercises(schedule_id);
 CREATE INDEX IF NOT EXISTS idx_training_exercises_order ON training_exercises(schedule_id, order_index);
+CREATE INDEX IF NOT EXISTS idx_training_exercises_parent ON training_exercises(parent_exercise_id);
 
 -- Verificatie
 SELECT 'Training exercises table aangemaakt!' as status;
