@@ -113,6 +113,8 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   const handleAcceptInvite = async (inviteId: string, groupId: string) => {
     try {
+      console.log('Accepting invite:', { inviteId, groupId, userId: user.id })
+      
       // Voeg toe als member
       const { error: memberError } = await supabase
         .from('group_members')
@@ -123,11 +125,14 @@ const Dashboard = ({ user }: DashboardProps) => {
 
       if (memberError) {
         console.error('Error joining group:', memberError)
+        alert(`Fout bij toevoegen aan groep: ${memberError.message}`)
         return
       }
 
+      console.log('Successfully added to group, updating invite status')
+
       // Update invite status en user_id
-      await supabase
+      const { error: updateError } = await supabase
         .from('group_invites')
         .update({ 
           status: 'accepted',
@@ -135,24 +140,47 @@ const Dashboard = ({ user }: DashboardProps) => {
         })
         .eq('id', inviteId)
 
+      if (updateError) {
+        console.error('Error updating invite:', updateError)
+      }
+
+      console.log('Invite accepted successfully!')
+      
       // Herlaad
-      loadInvites()
-      loadGroups()
+      await loadInvites()
+      await loadGroups()
+      
+      // Optioneel: navigeer naar de groep
+      navigate(`/group/${groupId}`)
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Error accepting invite:', err)
+      alert('Er is een fout opgetreden bij het accepteren van de uitnodiging')
     }
   }
 
   const handleDeclineInvite = async (inviteId: string) => {
     try {
-      await supabase
+      console.log('Declining invite:', inviteId)
+      
+      const { error } = await supabase
         .from('group_invites')
-        .update({ status: 'declined' })
+        .update({ 
+          status: 'declined',
+          invited_user_id: user.id 
+        })
         .eq('id', inviteId)
 
-      loadInvites()
+      if (error) {
+        console.error('Error declining invite:', error)
+        alert(`Fout bij weigeren: ${error.message}`)
+        return
+      }
+
+      console.log('Invite declined successfully!')
+      await loadInvites()
     } catch (err) {
-      console.error('Error:', err)
+      console.error('Error declining invite:', err)
+      alert('Er is een fout opgetreden bij het weigeren van de uitnodiging')
     }
   }
 
