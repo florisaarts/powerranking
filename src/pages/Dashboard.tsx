@@ -7,30 +7,7 @@ interface DashboardProps {
   user: User
 }
 
-// Mock data for demonstration
-const mockGroups = [
-  {
-    id: 1,
-    name: 'Gym Warriors',
-    memberCount: 12,
-    description: 'Hardcore lifting crew',
-    lastActivity: '2 hours ago'
-  },
-  {
-    id: 2,
-    name: 'Running Club',
-    memberCount: 8,
-    description: 'Daily runners unite',
-    lastActivity: '1 day ago'
-  },
-  {
-    id: 3,
-    name: 'CrossFit Champions',
-    memberCount: 15,
-    description: 'WOD enthusiasts',
-    lastActivity: '3 hours ago'
-  }
-]
+
 
 const Dashboard = ({ user }: DashboardProps) => {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
@@ -38,6 +15,7 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [newGroupDescription, setNewGroupDescription] = useState('')
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [groups] = useState<any[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -117,7 +95,7 @@ const Dashboard = ({ user }: DashboardProps) => {
                     Active Groups
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
-                    {mockGroups.length}
+                    {groups.length}
                   </dd>
                 </dl>
               </div>
@@ -190,31 +168,9 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
 
         <div className="border-t border-gray-200">
-          {mockGroups.length === 0 ? (
-            <div className="px-4 py-12 text-center">
-              <p className="text-gray-500">No groups yet. Create your first group!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {mockGroups.map((group) => (
-                <div
-                  key={group.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                >
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                    {group.name}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-3">
-                    {group.description}
-                  </p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>{group.memberCount} members</span>
-                    <span>Active {group.lastActivity}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="px-4 py-12 text-center">
+            <p className="text-gray-500">No groups yet. Create your first group!</p>
+          </div>
         </div>
       </div>
 
