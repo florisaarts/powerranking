@@ -11,6 +11,7 @@ import Ranking from './pages/Ranking'
 import GroupDetail from './pages/GroupDetail'
 import Profile from './pages/Profile'
 import Training from './pages/Training'
+import TrainingScheduleDetail from './pages/TrainingScheduleDetail'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -84,6 +85,10 @@ function App() {
             <Route 
               path="/training/:groupId" 
               element={user ? <Training user={user} /> : <Navigate to="/login" replace />} 
+            />
+            <Route 
+              path="/training-schedule/:scheduleId" 
+              element={user ? <TrainingScheduleDetail user={user} /> : <Navigate to="/login" replace />} 
             />
             <Route 
               path="/" 

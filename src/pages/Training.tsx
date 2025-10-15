@@ -155,7 +155,7 @@ const Training = ({ user }: TrainingProps) => {
               {schedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  onClick={() => navigate(`/training/${schedule.id}`)}
+                  onClick={() => navigate(`/training-schedule/${schedule.id}`)}
                   className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
                 >
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
