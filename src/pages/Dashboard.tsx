@@ -115,21 +115,36 @@ const Dashboard = ({ user }: DashboardProps) => {
     try {
       console.log('Accepting invite:', { inviteId, groupId, userId: user.id })
       
-      // Voeg toe als member
-      const { error: memberError } = await supabase
+      // Check eerst of gebruiker al lid is
+      const { data: existingMember, error: checkError } = await supabase
         .from('group_members')
-        .insert({
-          group_id: groupId,
-          user_id: user.id,
-        })
+        .select('id')
+        .eq('group_id', groupId)
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-      if (memberError) {
-        console.error('Error joining group:', memberError)
-        alert(`Fout bij toevoegen aan groep: ${memberError.message}`)
-        return
+      if (checkError) {
+        console.error('Error checking membership:', checkError)
       }
 
-      console.log('Successfully added to group, updating invite status')
+      // Voeg alleen toe als nog geen lid
+      if (!existingMember) {
+        const { error: memberError } = await supabase
+          .from('group_members')
+          .insert({
+            group_id: groupId,
+            user_id: user.id,
+          })
+
+        if (memberError) {
+          console.error('Error joining group:', memberError)
+          alert(`Fout bij toevoegen aan groep: ${memberError.message}`)
+          return
+        }
+        console.log('Successfully added to group')
+      } else {
+        console.log('User is already a member of this group')
+      }
 
       // Update invite status en user_id
       const { error: updateError } = await supabase
@@ -150,7 +165,7 @@ const Dashboard = ({ user }: DashboardProps) => {
       await loadInvites()
       await loadGroups()
       
-      // Optioneel: navigeer naar de groep
+      // Navigeer naar de groep
       navigate(`/group/${groupId}`)
     } catch (err) {
       console.error('Error accepting invite:', err)
