@@ -63,7 +63,11 @@ const Dashboard = ({ user }: DashboardProps) => {
         .select(`
           *,
           group_members (
-            count
+            count,
+            user_id,
+            profiles (
+              username
+            )
           )
         `)
         .order('created_at', { ascending: false })
@@ -222,6 +226,8 @@ const Dashboard = ({ user }: DashboardProps) => {
     setJoinError(null)
 
     try {
+      console.log('Searching for group with code:', joinCode.toUpperCase())
+      
       // Zoek groep op basis van code
       const { data: group, error: groupError } = await supabase
         .from('groups')
@@ -229,8 +235,11 @@ const Dashboard = ({ user }: DashboardProps) => {
         .eq('invite_code', joinCode.toUpperCase())
         .single()
 
+      console.log('Group search result:', { group, groupError })
+
       if (groupError || !group) {
-        setJoinError('Groep niet gevonden. Controleer de code.')
+        console.error('Group not found error:', groupError)
+        setJoinError(`Groep niet gevonden. Controleer de code. (${groupError?.message || 'Geen groep'})`)
         return
       }
 
@@ -439,17 +448,46 @@ const Dashboard = ({ user }: DashboardProps) => {
               {groups.map((group) => (
                 <div
                   key={group.id}
-                  onClick={() => navigate(`/group/${group.id}`)}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                    {group.name}
-                  </h4>
-                  <p className="text-gray-600 text-sm mb-3">
-                    {group.description || 'Geen beschrijving'}
-                  </p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>{group.group_members?.[0]?.count || 0} members</span>
+                  <div onClick={() => navigate(`/group/${group.id}`)} className="cursor-pointer">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                      {group.name}
+                    </h4>
+                    <p className="text-gray-600 text-sm mb-3">
+                      {group.description || 'Geen beschrijving'}
+                    </p>
+                  </div>
+                  
+                  {/* Members List */}
+                  {group.group_members && group.group_members.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <p className="text-xs font-medium text-gray-500 mb-2">
+                        Leden ({group.group_members[0]?.count || 0}):
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {group.group_members.slice(0, 5).map((member: any, idx: number) => (
+                          <button
+                            key={idx}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigate(`/profile/${member.user_id}`)
+                            }}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
+                          >
+                            {member.profiles?.username || 'Unknown'}
+                          </button>
+                        ))}
+                        {group.group_members[0]?.count > 5 && (
+                          <span className="inline-flex items-center px-2 py-1 text-xs text-gray-500">
+                            +{group.group_members[0].count - 5} meer
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-end items-center text-sm text-gray-500 mt-2">
                     <span>{new Date(group.created_at).toLocaleDateString('nl-NL')}</span>
                   </div>
                 </div>

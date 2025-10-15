@@ -203,19 +203,28 @@ const GroupDetail = () => {
               </h2>
               <div className="space-y-3">
                 {members.map((member) => (
-                  <div
+                  <button
                     key={member.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    onClick={() => navigate(`/profile/${member.user_id}`)}
+                    className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
                   >
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {member.profiles?.username || 'Onbekend'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Lid sinds {new Date(member.joined_at).toLocaleDateString('nl-NL')}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                        {(member.profiles?.username || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {member.profiles?.username || 'Onbekend'}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Lid sinds {new Date(member.joined_at).toLocaleDateString('nl-NL')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 ))}
               </div>
             </div>
