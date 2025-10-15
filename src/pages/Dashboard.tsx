@@ -251,6 +251,7 @@ const Dashboard = ({ user }: DashboardProps) => {
               {groups.map((group) => (
                 <div
                   key={group.id}
+                  onClick={() => navigate(`/group/${group.id}`)}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                 >
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">

@@ -8,6 +8,7 @@ import Register from './pages/Register'
 import ChooseUsername from './pages/ChooseUsername'
 import Dashboard from './pages/Dashboard'
 import Ranking from './pages/Ranking'
+import GroupDetail from './pages/GroupDetail'
 
 function App() {
   const [user, setUser] = useState<User | null>(null)
@@ -69,6 +70,10 @@ function App() {
             <Route 
               path="/ranking" 
               element={user ? <Ranking /> : <Navigate to="/login" replace />} 
+            />
+            <Route 
+              path="/group/:groupId" 
+              element={user ? <GroupDetail /> : <Navigate to="/login" replace />} 
             />
             <Route 
               path="/" 

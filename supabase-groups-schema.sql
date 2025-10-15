@@ -1,6 +1,9 @@
 -- SQL voor het aanmaken van de groups tabel in Supabase
 -- Voer dit uit in de Supabase SQL Editor
 
+-- IMPORTANT: Add foreign key from group_members to profiles
+-- This allows us to join group_members with profiles to get usernames
+
 -- Groups tabel
 create table groups (
   id uuid primary key default gen_random_uuid(),
