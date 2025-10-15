@@ -17,17 +17,6 @@ interface TrainingSchedule {
   created_at: string
 }
 
-interface TrainingSession {
-  id: string
-  schedule_id: string
-  name: string
-  description: string | null
-  scheduled_date: string
-  scheduled_time: string | null
-  duration_minutes: number | null
-  location: string | null
-}
-
 const Training = ({ user }: TrainingProps) => {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
