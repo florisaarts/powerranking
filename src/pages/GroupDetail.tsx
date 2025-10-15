@@ -55,25 +55,48 @@ const GroupDetail = () => {
       setGroup(groupData)
 
       // Laad members
+      console.log('Loading members for group:', groupId)
+      
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
-        .select(`
-          *,
-          profiles (
-            username
-          )
-        `)
+        .select('*')
         .eq('group_id', groupId)
 
-      console.log('Loading members for group:', groupId)
       console.log('Members data:', membersData)
       console.log('Members error:', membersError)
 
       if (membersError) {
         console.error('Error loading members:', membersError)
+        setMembers([])
+        return
+      }
+
+      // Laad profiles voor deze members
+      if (membersData && membersData.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', membersData.map(m => m.user_id))
+
+        console.log('Profiles data:', profiles)
+        console.log('Profiles error:', profilesError)
+
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError)
+        }
+
+        // Combineer members met profiles
+        const membersWithProfiles = membersData.map(member => ({
+          ...member,
+          profiles: profiles?.find(p => p.id === member.user_id) || { username: 'Unknown' }
+        }))
+
+        console.log('Setting members:', membersWithProfiles.length, 'members found')
+        console.log('Members with profiles:', membersWithProfiles)
+        setMembers(membersWithProfiles)
       } else {
-        console.log('Setting members:', membersData?.length || 0, 'members found')
-        setMembers(membersData || [])
+        console.log('No members found for this group')
+        setMembers([])
       }
     } catch (err) {
       setError('Er is een fout opgetreden')
