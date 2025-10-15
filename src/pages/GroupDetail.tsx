@@ -86,7 +86,7 @@ const GroupDetail = () => {
 
     try {
       // Check of de email een bestaande user is
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', inviteEmail) // Dit werkt niet direct, we moeten via auth
