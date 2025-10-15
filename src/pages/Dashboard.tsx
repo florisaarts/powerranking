@@ -18,6 +18,7 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [groups, setGroups] = useState<any[]>([])
+  const [invites, setInvites] = useState<any[]>([])
   const [createError, setCreateError] = useState<string | null>(null)
   const [joinError, setJoinError] = useState<string | null>(null)
   const [creatingGroup, setCreatingGroup] = useState(false)
@@ -52,6 +53,7 @@ const Dashboard = ({ user }: DashboardProps) => {
 
     checkUsername()
     loadGroups()
+    loadInvites()
   }, [user.id, navigate])
 
   const loadGroups = async () => {
@@ -73,6 +75,73 @@ const Dashboard = ({ user }: DashboardProps) => {
         console.log('Loaded groups:', data)
         setGroups(data || [])
       }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const loadInvites = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('group_invites')
+        .select(`
+          *,
+          groups (
+            name,
+            description
+          )
+        `)
+        .eq('invited_user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading invites:', error)
+      } else {
+        setInvites(data || [])
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const handleAcceptInvite = async (inviteId: string, groupId: string) => {
+    try {
+      // Voeg toe als member
+      const { error: memberError } = await supabase
+        .from('group_members')
+        .insert({
+          group_id: groupId,
+          user_id: user.id,
+        })
+
+      if (memberError) {
+        console.error('Error joining group:', memberError)
+        return
+      }
+
+      // Update invite status
+      await supabase
+        .from('group_invites')
+        .update({ status: 'accepted' })
+        .eq('id', inviteId)
+
+      // Herlaad
+      loadInvites()
+      loadGroups()
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const handleDeclineInvite = async (inviteId: string) => {
+    try {
+      await supabase
+        .from('group_invites')
+        .update({ status: 'declined' })
+        .eq('id', inviteId)
+
+      loadInvites()
     } catch (err) {
       console.error('Error:', err)
     }
@@ -215,6 +284,49 @@ const Dashboard = ({ user }: DashboardProps) => {
           Track your progress and compete with your groups
         </p>
       </div>
+
+      {/* Pending Invites */}
+      {invites.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            Groepsuitnodigingen ({invites.length})
+          </h3>
+          <div className="space-y-3">
+            {invites.map((invite) => (
+              <div
+                key={invite.id}
+                className="bg-white rounded-lg p-4 flex justify-between items-center shadow-sm"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {invite.groups?.name || 'Groep'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {invite.groups?.description || 'Geen beschrijving'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Uitgenodigd op {new Date(invite.created_at).toLocaleDateString('nl-NL')}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleAcceptInvite(invite.id, invite.group_id)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Accepteren
+                  </button>
+                  <button
+                    onClick={() => handleDeclineInvite(invite.id)}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    Weigeren
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
