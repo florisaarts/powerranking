@@ -22,6 +22,25 @@ const ChooseUsername = () => {
         setError('Niet ingelogd')
         return
       }
+      // Check eerst of username al bestaat
+      const { data: existingUser, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single()
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        setError('Fout bij controleren gebruikersnaam')
+        setLoading(false)
+        return
+      }
+
+      if (existingUser) {
+        setError('Deze gebruikersnaam is al in gebruik')
+        setLoading(false)
+        return
+      }
+
       // Sla username op in een profiles tabel
       const { error } = await supabase.from('profiles').upsert({
         id: user.id,
@@ -29,7 +48,11 @@ const ChooseUsername = () => {
         updated_at: new Date().toISOString(),
       })
       if (error) {
-        setError(error.message)
+        if (error.code === '23505') {
+          setError('Deze gebruikersnaam is al in gebruik')
+        } else {
+          setError(error.message)
+        }
       } else {
         navigate('/dashboard')
       }

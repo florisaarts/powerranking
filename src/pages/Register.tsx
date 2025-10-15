@@ -18,15 +18,24 @@ const Register = () => {
     setLoading(true)
     setError(null)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       })
       if (error) {
-        setError(error.message)
-      } else {
-        // Na registratie, navigeer naar username keuze
-        navigate('/choose-username')
+        if (error.message.includes('already registered')) {
+          setError('Dit emailadres is al geregistreerd. Probeer in te loggen.')
+        } else {
+          setError(error.message)
+        }
+      } else if (data.user) {
+        // Check of email confirmatie vereist is
+        if (data.user.identities && data.user.identities.length === 0) {
+          setError('Dit emailadres is al in gebruik')
+        } else {
+          // Na registratie, navigeer naar username keuze
+          navigate('/choose-username')
+        }
       }
     } catch (err) {
       setError('Er is een onverwachte fout opgetreden')

@@ -1,5 +1,7 @@
-import { useState } from 'react'  
+import { useState, useEffect } from 'react'  
 import { User } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabaseClient'
+import { useNavigate } from 'react-router-dom'
 
 interface DashboardProps {
   user: User
@@ -34,6 +36,46 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupDescription, setNewGroupDescription] = useState('')
+  const [username, setUsername] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const checkUsername = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single()
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking username:', error)
+        }
+
+        if (!data || !data.username) {
+          // Geen username gevonden, stuur naar username pagina
+          navigate('/choose-username')
+        } else {
+          setUsername(data.username)
+        }
+      } catch (err) {
+        console.error('Error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkUsername()
+  }, [user.id, navigate])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
 
   const handleCreateGroup = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +91,7 @@ const Dashboard = ({ user }: DashboardProps) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user.email?.split('@')[0]}! 💪
+          Welcome back, {username || user.email?.split('@')[0]}! 💪
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           🚀 App successfully deployed on GitHub! Last updated: {new Date().toLocaleDateString('nl-NL')}
