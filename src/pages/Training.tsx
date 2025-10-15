@@ -44,19 +44,26 @@ const Training = ({ user }: TrainingProps) => {
 
   const loadSchedules = async () => {
     try {
+      console.log('🔄 Loading training schedules for group:', groupId)
+      
       const { data, error } = await supabase
         .from('training_schedules')
         .select('*')
         .eq('group_id', groupId)
         .order('created_at', { ascending: false })
 
+      console.log('📊 Training schedules result:', { data, error })
+
       if (error) {
-        console.error('Error loading schedules:', error)
+        console.error('❌ Error loading schedules:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
       } else {
+        console.log('✅ Found', data?.length || 0, 'training schedules')
         setSchedules(data || [])
       }
     } catch (err) {
-      console.error('Error:', err)
+      console.error('💥 Unexpected error:', err)
     } finally {
       setLoading(false)
     }
@@ -67,7 +74,14 @@ const Training = ({ user }: TrainingProps) => {
     setCreating(true)
 
     try {
-      const { error } = await supabase
+      console.log('Creating training schedule:', {
+        group_id: groupId,
+        name: newScheduleName,
+        description: newScheduleDescription,
+        created_by: user.id
+      })
+
+      const { data, error } = await supabase
         .from('training_schedules')
         .insert({
           group_id: groupId,
@@ -75,6 +89,9 @@ const Training = ({ user }: TrainingProps) => {
           description: newScheduleDescription,
           created_by: user.id
         })
+        .select()
+
+      console.log('Create result:', { data, error })
 
       if (error) {
         console.error('Error creating schedule:', error)
@@ -82,6 +99,7 @@ const Training = ({ user }: TrainingProps) => {
         return
       }
 
+      console.log('✅ Training schedule created successfully!')
       setShowCreateModal(false)
       setNewScheduleName('')
       setNewScheduleDescription('')
