@@ -8,6 +8,10 @@
 ALTER TABLE training_exercises 
 ADD COLUMN IF NOT EXISTS parent_exercise_id uuid REFERENCES training_exercises(id) ON DELETE CASCADE;
 
+-- Verwijder eerst de CHECK constraint op weight_percentage
+ALTER TABLE training_exercises 
+DROP CONSTRAINT IF EXISTS training_exercises_weight_percentage_check;
+
 -- Verander sets, reps en weight_percentage naar text
 ALTER TABLE training_exercises 
 ALTER COLUMN sets TYPE text USING sets::text;
