@@ -82,6 +82,7 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   const loadInvites = async () => {
     try {
+      // Zoek uitnodigingen op basis van email OF user_id
       const { data, error } = await supabase
         .from('group_invites')
         .select(`
@@ -91,13 +92,14 @@ const Dashboard = ({ user }: DashboardProps) => {
             description
           )
         `)
-        .eq('invited_user_id', user.id)
+        .or(`invited_user_id.eq.${user.id},invited_user_email.eq.${user.email}`)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error loading invites:', error)
       } else {
+        console.log('Loaded invites:', data)
         setInvites(data || [])
       }
     } catch (err) {
@@ -120,10 +122,13 @@ const Dashboard = ({ user }: DashboardProps) => {
         return
       }
 
-      // Update invite status
+      // Update invite status en user_id
       await supabase
         .from('group_invites')
-        .update({ status: 'accepted' })
+        .update({ 
+          status: 'accepted',
+          invited_user_id: user.id 
+        })
         .eq('id', inviteId)
 
       // Herlaad

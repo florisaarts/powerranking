@@ -85,18 +85,18 @@ const GroupDetail = () => {
     setInviteSuccess(false)
 
     try {
-      // Check of de email een bestaande user is
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', inviteEmail) // Dit werkt niet direct, we moeten via auth
-        .single()
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      
+      if (!currentUser) {
+        setInviteError('Niet ingelogd')
+        return
+      }
 
       const { error } = await supabase.from('group_invites').insert({
         group_id: groupId,
-        invited_by: (await supabase.auth.getUser()).data.user?.id,
-        invited_user_email: inviteEmail,
-        invited_user_id: profile?.id || null,
+        invited_by: currentUser.id,
+        invited_user_email: inviteEmail.toLowerCase(),
+        invited_user_id: null, // Wordt ingevuld wanneer user accepteert
       })
 
       if (error) {
