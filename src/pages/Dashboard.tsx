@@ -58,29 +58,74 @@ const Dashboard = ({ user }: DashboardProps) => {
 
   const loadGroups = async () => {
     try {
+      console.log('🔄 Loading groups...')
+      console.log('Current user ID:', user.id)
+      
+      // Eerst: laad groepen met member count
       const { data, error } = await supabase
         .from('groups')
         .select(`
           *,
           group_members (
-            count,
-            user_id,
-            profiles (
-              username
-            )
+            count
           )
         `)
         .order('created_at', { ascending: false })
 
+      console.log('📊 Groups query result:', { data, error })
+
       if (error) {
-        console.error('Error loading groups:', error)
+        console.error('❌ Error loading groups:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
         console.error('Error details:', JSON.stringify(error, null, 2))
+        return
+      }
+
+      // Dan: voor elke groep, laad de members met hun profiles
+      if (data) {
+        const groupsWithMembers = await Promise.all(
+          data.map(async (group) => {
+            const { data: members } = await supabase
+              .from('group_members')
+              .select('user_id')
+              .eq('group_id', group.id)
+              .limit(5)
+
+            // Haal usernames op voor deze members
+            if (members && members.length > 0) {
+              const { data: profiles } = await supabase
+                .from('profiles')
+                .select('id, username')
+                .in('id', members.map(m => m.user_id))
+
+              // Combineer members met profiles
+              const membersWithProfiles = members.map(member => ({
+                user_id: member.user_id,
+                profiles: profiles?.find(p => p.id === member.user_id)
+              }))
+
+              return {
+                ...group,
+                group_members: [
+                  group.group_members[0], // count object
+                  ...membersWithProfiles
+                ]
+              }
+            }
+
+            return group
+          })
+        )
+
+        console.log('✅ Successfully loaded', groupsWithMembers.length, 'groups')
+        console.log('Groups with members:', groupsWithMembers)
+        setGroups(groupsWithMembers)
       } else {
-        console.log('Loaded groups:', data)
-        setGroups(data || [])
+        setGroups([])
       }
     } catch (err) {
-      console.error('Error:', err)
+      console.error('💥 Unexpected error:', err)
     }
   }
 
