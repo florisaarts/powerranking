@@ -14,6 +14,7 @@ build/
 .env.development.local
 .env.test.local
 .env.production.local
+# Note: .env.production is included for demo deployment
 
 # IDE files
 .vscode/

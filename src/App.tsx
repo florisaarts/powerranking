@@ -11,6 +11,12 @@ function App() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Debug logging for deployment
+  console.log('PowerRanking App starting...', {
+    supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+    mode: import.meta.env.MODE
+  })
+
   useEffect(() => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     
