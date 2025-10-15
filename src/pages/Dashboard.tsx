@@ -11,13 +11,17 @@ interface DashboardProps {
 
 const Dashboard = ({ user }: DashboardProps) => {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [showJoinGroup, setShowJoinGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupDescription, setNewGroupDescription] = useState('')
+  const [joinCode, setJoinCode] = useState('')
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [groups, setGroups] = useState<any[]>([])
   const [createError, setCreateError] = useState<string | null>(null)
+  const [joinError, setJoinError] = useState<string | null>(null)
   const [creatingGroup, setCreatingGroup] = useState(false)
+  const [joiningGroup, setJoiningGroup] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -138,6 +142,65 @@ const Dashboard = ({ user }: DashboardProps) => {
     }
   }
 
+  const handleJoinGroup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setJoiningGroup(true)
+    setJoinError(null)
+
+    try {
+      // Zoek groep op basis van code
+      const { data: group, error: groupError } = await supabase
+        .from('groups')
+        .select('*')
+        .eq('invite_code', joinCode.toUpperCase())
+        .single()
+
+      if (groupError || !group) {
+        setJoinError('Groep niet gevonden. Controleer de code.')
+        return
+      }
+
+      // Check of je al lid bent
+      const { data: existing } = await supabase
+        .from('group_members')
+        .select('*')
+        .eq('group_id', group.id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (existing) {
+        setJoinError('Je bent al lid van deze groep')
+        return
+      }
+
+      // Voeg toe als member
+      const { error: memberError } = await supabase
+        .from('group_members')
+        .insert({
+          group_id: group.id,
+          user_id: user.id,
+        })
+
+      if (memberError) {
+        setJoinError(memberError.message)
+        return
+      }
+
+      // Reset en herlaad
+      setShowJoinGroup(false)
+      setJoinCode('')
+      await loadGroups()
+      
+      // Navigeer naar de groep
+      navigate(`/group/${group.id}`)
+    } catch (err) {
+      setJoinError('Er is een onverwachte fout opgetreden')
+      console.error('Error joining group:', err)
+    } finally {
+      setJoiningGroup(false)
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -233,12 +296,20 @@ const Dashboard = ({ user }: DashboardProps) => {
               Groups you're currently a member of
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateGroup(true)}
-            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            Create Group
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowJoinGroup(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Join Group
+            </button>
+            <button
+              onClick={() => setShowCreateGroup(true)}
+              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Create Group
+            </button>
+          </div>
         </div>
 
         <div className="border-t border-gray-200">
@@ -323,6 +394,63 @@ const Dashboard = ({ user }: DashboardProps) => {
                     onClick={() => {
                       setShowCreateGroup(false)
                       setCreateError(null)
+                    }}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Join Group Modal */}
+      {showJoinGroup && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Join een Groep
+              </h3>
+              {joinError && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {joinError}
+                </div>
+              )}
+              <form onSubmit={handleJoinGroup}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Groepscode
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary uppercase text-center text-2xl font-bold tracking-wider"
+                    value={joinCode}
+                    onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                    placeholder="ABC123"
+                    maxLength={6}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Vraag de groepscode aan bij een groepslid
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={joiningGroup}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    {joiningGroup ? 'Joining...' : 'Join Group'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowJoinGroup(false)
+                      setJoinError(null)
+                      setJoinCode('')
                     }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md text-sm font-medium transition-colors"
                   >
