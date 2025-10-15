@@ -56,13 +56,17 @@ const Dashboard = ({ user }: DashboardProps) => {
         .from('groups')
         .select(`
           *,
-          group_members(count)
+          group_members (
+            count
+          )
         `)
         .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Error loading groups:', error)
+        console.error('Error details:', JSON.stringify(error, null, 2))
       } else {
+        console.log('Loaded groups:', data)
         setGroups(data || [])
       }
     } catch (err) {
@@ -84,6 +88,8 @@ const Dashboard = ({ user }: DashboardProps) => {
     setCreateError(null)
 
     try {
+      console.log('Creating group...', { name: newGroupName, description: newGroupDescription, user_id: user.id })
+      
       // Maak de groep aan
       const { data: group, error: groupError } = await supabase
         .from('groups')
@@ -96,9 +102,12 @@ const Dashboard = ({ user }: DashboardProps) => {
         .single()
 
       if (groupError) {
+        console.error('Group creation error:', groupError)
         setCreateError(groupError.message)
         return
       }
+
+      console.log('Group created:', group)
 
       // Voeg de creator automatisch toe als member
       const { error: memberError } = await supabase
@@ -109,15 +118,18 @@ const Dashboard = ({ user }: DashboardProps) => {
         })
 
       if (memberError) {
+        console.error('Member add error:', memberError)
         setCreateError(memberError.message)
         return
       }
+
+      console.log('Member added successfully')
 
       // Reset form en herlaad groepen
       setShowCreateGroup(false)
       setNewGroupName('')
       setNewGroupDescription('')
-      loadGroups()
+      await loadGroups()
     } catch (err) {
       setCreateError('Er is een onverwachte fout opgetreden')
       console.error('Error creating group:', err)

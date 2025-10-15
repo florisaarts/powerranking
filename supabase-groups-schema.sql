@@ -59,7 +59,7 @@ create policy "Group creators can add members"
   with check (
     group_id in (
       select id from groups where created_by = auth.uid()
-    )
+    ) OR user_id = auth.uid()
   );
 
 create policy "Users can leave groups"
