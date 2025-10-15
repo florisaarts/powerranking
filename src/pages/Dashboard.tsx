@@ -15,7 +15,9 @@ const Dashboard = ({ user }: DashboardProps) => {
   const [newGroupDescription, setNewGroupDescription] = useState('')
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [groups] = useState<any[]>([])
+  const [groups, setGroups] = useState<any[]>([])
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [creatingGroup, setCreatingGroup] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -45,7 +47,28 @@ const Dashboard = ({ user }: DashboardProps) => {
     }
 
     checkUsername()
+    loadGroups()
   }, [user.id, navigate])
+
+  const loadGroups = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('groups')
+        .select(`
+          *,
+          group_members(count)
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading groups:', error)
+      } else {
+        setGroups(data || [])
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
 
   if (loading) {
     return (
@@ -55,13 +78,52 @@ const Dashboard = ({ user }: DashboardProps) => {
     )
   }
 
-  const handleCreateGroup = (e: React.FormEvent) => {
+  const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement group creation with Supabase
-    console.log('Creating group:', { name: newGroupName, description: newGroupDescription })
-    setShowCreateGroup(false)
-    setNewGroupName('')
-    setNewGroupDescription('')
+    setCreatingGroup(true)
+    setCreateError(null)
+
+    try {
+      // Maak de groep aan
+      const { data: group, error: groupError } = await supabase
+        .from('groups')
+        .insert({
+          name: newGroupName,
+          description: newGroupDescription,
+          created_by: user.id,
+        })
+        .select()
+        .single()
+
+      if (groupError) {
+        setCreateError(groupError.message)
+        return
+      }
+
+      // Voeg de creator automatisch toe als member
+      const { error: memberError } = await supabase
+        .from('group_members')
+        .insert({
+          group_id: group.id,
+          user_id: user.id,
+        })
+
+      if (memberError) {
+        setCreateError(memberError.message)
+        return
+      }
+
+      // Reset form en herlaad groepen
+      setShowCreateGroup(false)
+      setNewGroupName('')
+      setNewGroupDescription('')
+      loadGroups()
+    } catch (err) {
+      setCreateError('Er is een onverwachte fout opgetreden')
+      console.error('Error creating group:', err)
+    } finally {
+      setCreatingGroup(false)
+    }
   }
 
   return (
@@ -168,9 +230,31 @@ const Dashboard = ({ user }: DashboardProps) => {
         </div>
 
         <div className="border-t border-gray-200">
-          <div className="px-4 py-12 text-center">
-            <p className="text-gray-500">No groups yet. Create your first group!</p>
-          </div>
+          {groups.length === 0 ? (
+            <div className="px-4 py-12 text-center">
+              <p className="text-gray-500">No groups yet. Create your first group!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {groups.map((group) => (
+                <div
+                  key={group.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    {group.name}
+                  </h4>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {group.description || 'Geen beschrijving'}
+                  </p>
+                  <div className="flex justify-between items-center text-sm text-gray-500">
+                    <span>{group.group_members?.[0]?.count || 0} members</span>
+                    <span>{new Date(group.created_at).toLocaleDateString('nl-NL')}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -182,6 +266,11 @@ const Dashboard = ({ user }: DashboardProps) => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Create New Group
               </h3>
+              {createError && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {createError}
+                </div>
+              )}
               <form onSubmit={handleCreateGroup}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -211,13 +300,17 @@ const Dashboard = ({ user }: DashboardProps) => {
                 <div className="flex gap-3">
                   <button
                     type="submit"
-                    className="flex-1 bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-md text-sm font-medium transition-colors"
+                    disabled={creatingGroup}
+                    className="flex-1 bg-primary hover:bg-primary-dark text-white py-2 px-4 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Create Group
+                    {creatingGroup ? 'Creating...' : 'Create Group'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowCreateGroup(false)}
+                    onClick={() => {
+                      setShowCreateGroup(false)
+                      setCreateError(null)
+                    }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md text-sm font-medium transition-colors"
                   >
                     Cancel
