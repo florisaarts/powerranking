@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 // Mock data for demonstration
 const mockRankings = [
@@ -52,7 +52,7 @@ const mockRankings = [
   }
 ]
 
-const Ranking: React.FC = () => {
+const Ranking = () => {
   const [selectedGroup, setSelectedGroup] = useState('All Groups')
   const [selectedExercise, setSelectedExercise] = useState('All Exercises')
 

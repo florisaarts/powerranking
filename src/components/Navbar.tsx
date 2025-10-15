@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
@@ -7,7 +6,7 @@ interface NavbarProps {
   user: User
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user }) => {
+const Navbar = ({ user }: NavbarProps) => {
   const location = useLocation()
 
   const handleSignOut = async () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'  
 import { User } from '@supabase/supabase-js'
 
 interface DashboardProps {
@@ -30,7 +30,7 @@ const mockGroups = [
   }
 ]
 
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+const Dashboard = ({ user }: DashboardProps) => {
   const [showCreateGroup, setShowCreateGroup] = useState(false)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupDescription, setNewGroupDescription] = useState('')
@@ -51,6 +51,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <h1 className="text-3xl font-bold text-gray-900">
           Welcome back, {user.email?.split('@')[0]}! 💪
         </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          🚀 App successfully deployed on GitHub! Last updated: {new Date().toLocaleDateString('nl-NL')}
+        </p>
         <p className="mt-2 text-gray-600">
           Track your progress and compete with your groups
         </p>
