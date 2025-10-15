@@ -4,6 +4,8 @@ import { supabase } from './lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
+import Register from './pages/Register'
+import ChooseUsername from './pages/ChooseUsername'
 import Dashboard from './pages/Dashboard'
 import Ranking from './pages/Ranking'
 
@@ -73,6 +75,14 @@ function App() {
             <Route 
               path="/login" 
               element={!user ? <Login /> : <Navigate to="/dashboard" replace />} 
+            />
+            <Route 
+              path="/register" 
+              element={!user ? <Register /> : <Navigate to="/dashboard" replace />} 
+            />
+            <Route 
+              path="/choose-username" 
+              element={user ? <ChooseUsername /> : <Navigate to="/login" replace />} 
             />
             <Route 
               path="/dashboard" 
