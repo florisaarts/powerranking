@@ -1,8 +1,17 @@
 -- Fix RLS policy zodat gebruikers groepen kunnen vinden via invite code
 -- Voer dit uit in de Supabase SQL Editor
 
--- Verwijder de oude SELECT policy
+-- EERST: Verwijder en hermaak group_members policy (simpel, geen recursie)
+DROP POLICY IF EXISTS "Users can view group members" ON group_members;
+DROP POLICY IF EXISTS "Users can view members of their groups" ON group_members;
+
+CREATE POLICY "Users can view all group members"
+  ON group_members FOR SELECT
+  USING (true);  -- Simpel: iedereen kan members zien (geen recursie)
+
+-- DAN: Fix groups policy
 DROP POLICY IF EXISTS "Users can view their groups" ON groups;
+DROP POLICY IF EXISTS "Users can view their groups and search by invite code" ON groups;
 
 -- Nieuwe SELECT policy: gebruikers kunnen hun eigen groepen zien EN groepen vinden via invite_code
 CREATE POLICY "Users can view their groups and search by invite code"
