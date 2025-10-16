@@ -38,9 +38,8 @@ const TrainingScheduleDetail = ({ user }: TrainingScheduleDetailProps) => {
   const [schedule, setSchedule] = useState<TrainingSchedule | null>(null)
   const [exercises, setExercises] = useState<TrainingExercise[]>([])
   const [loading, setLoading] = useState(true)
-  const [showAddBasisModal, setShowAddBasisModal] = useState(false)
-  const [showAddTussenModal, setShowAddTussenModal] = useState(false)
-  const [selectedBasisExercise, setSelectedBasisExercise] = useState<string | null>(null)
+  const [showAddModal, setShowAddModal] = useState<boolean>(false)
+  const [exerciseType, setExerciseType] = useState<'basis' | 'tussen' | null>('basis')
   
   // Form fields
   const [name, setName] = useState('')
